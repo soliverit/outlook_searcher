@@ -30,7 +30,7 @@ class Appointment(OutlookerCOMObject):
 			return
 		## Create Attendee instances for all participants
 		self.attendees	= []
-		for name in self.appointment.RequiredAttendees.split(";"):
+		for name in self.comObject.RequiredAttendees.split(";"):
 			self.attendees.append(Attendee(name))
 	##
 	# Find an instance of an Attendee and replace it with the

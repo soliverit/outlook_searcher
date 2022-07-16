@@ -1,9 +1,20 @@
+##
+# Includes
+##
+## Native
 import win32com.client
-from re					import search, IGNORECASE
-from datetime			import datetime
-from .appointment_set	import AppointmentSet
-from .appointment		import Appointment
+from re							import search, IGNORECASE
+from datetime					import datetime
+## Project
+from .outlooker_com_object 		import OutlookerCOMObject
+from .outlooker_com_object_set	import OutlookerCOMObjectSet
 
+##
+# Outlook Searcher: Search email folders for things
+#
+# The class is designed to search folders in the currently
+# logged in Outlook account.
+##
 class OutlookSearcher():
 	##
 	# Folder enumerated values
@@ -33,22 +44,43 @@ class OutlookSearcher():
 	QUICK_STEP_SETTINGS				= 31
 	CONTACT_SEARCH					= 33
 	SOCIAL_ACTIVITY_NOTIFICATIONS	= 37
-	def __init__(self, folderID):
-		self.client		= win32com.client.Dispatch('Outlook.Application').GetNamespace('MAPI')
-		self.folderID	= folderID
+	##
+	# folderID:		Integer (from enumerated values above) denoting the target Outlook folder
+	##
+	def __init__(self, folderID, itemSetType=OutlookerCOMObjectSet, includeResources=True):
+		## Define stuff
+		self.client							= win32com.client.Dispatch('Outlook.Application').GetNamespace('MAPI')
+		self.folder							= self.client.getDefaultFolder(folderID)
+		self.folderItems					= self.folder.Items	
+		self.folderItems.IncludeRecurrences = includeResources
+		##
+		# Handling item set dependencies:
+		#
+		# Sets and object types are not particularly pretty in handling. Some searches, like
+		# Calendar have bespoke objects for sets and instances. Rather than create a complicated
+		# hash of the enumerated values and have the user modify instance and set classes as required
+		# but I figure that the constructor can just be passed a set type. Bonus, set types can be mixed
+		##
+		self.itemSetType	= itemSetType
+	##
+	# Search self.folder for items with a property whose value matches a regex search pattern.
+	#
+	# start:	datetime first day of the query period
+	# end:		datetime last day of the query period
+	# target:	string property to be searched
+	# pattern:	string regex pattern for searching the target property
+	##
 	def search(self, start, end, target, pattern):
-		calendar 	= self.client.getDefaultFolder(self.folderID).Items	# Calnedar is 9, probably. Terrible get method
-		calendar.IncludeRecurrences = True
 		# Get all appointments between start and end date
-		calendar.Sort('[Start]')
-		restriction = "[Start] >= '" + start.strftime('%d/%m/%Y') + "' AND [END] <= '" + end.strftime('%d/%m/%Y') + "'"
-		calendar 	= calendar.Restrict(restriction)
-		# Filter results
-		results		= []
-		for appointment in calendar:
-			if search(pattern, getattr(appointment, target), IGNORECASE):
-				results.append(Appointment(appointment))
-		return AppointmentSet(results)
+		self.folderItems.Sort('[Start]')
+		restriction 		= "[Start] >= '" + start.strftime('%d/%m/%Y') + "' AND [END] <= '" + end.strftime('%d/%m/%Y') + "'"
+		folderItems			= self.folderItems.Restrict(restriction)
+		# Filter results with regex
+		results				= self.itemSetType()
+		for item in folderItems:
+			if search(pattern, getattr(item, target), IGNORECASE):
+				results.append(item)
+		return results
 	def help(self):
 		print("\n### Selecting the query folder ###\n")
 		print("Select a folder using the folder enumerated values")

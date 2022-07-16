@@ -1,4 +1,4 @@
-class Attendee():
+class Participant():
 	def __init__(self, name):
 		self.name			= name
 		self.appointments	= []
