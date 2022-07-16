@@ -79,7 +79,7 @@ class OutlookSearcher():
 		results				= self.itemSetType()
 		for item in folderItems:
 			if search(pattern, getattr(item, target), IGNORECASE):
-				results.append(item)
+				results.append(results.makeObject(item))
 		return results
 	def help(self):
 		print("\n### Selecting the query folder ###\n")

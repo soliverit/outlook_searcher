@@ -19,10 +19,12 @@ end				= datetime(2020, 12, 1)
 pattern			= "(david\s?hunter)|(hunter\s?,\s?david)|(yondr)|(briink)|(commtech)|(logitek)|(logi-tek)"
 searcher		= OutlookSearcher(OutlookSearcher.CALENDAR, AppointmentSet)
 appointments	= searcher.search(start, end, "RequiredAttendees", pattern)
+# print("____dsfasdf")
+# exit()
 appointments	+= searcher.search(start, end, "subject", pattern)
 appointments	+= searcher.search(start, end, "subject", "GCA")
-appointments.unifyAttendees()
-attendees		= appointments.uniqueAttendees
+appointments.unifyParticipants()
+attendees		= appointments.uniqueParticipants
 ###
 # Print stuff
 ##

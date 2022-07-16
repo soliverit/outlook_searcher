@@ -1,4 +1,10 @@
 ##
+# Includes
+##
+## Native
+## Project
+from .participant	import Participant
+##
 # Outlooker COM Object
 #
 # A base class for objects returned by win32com client
@@ -11,15 +17,18 @@ class OutlookerCOMObject():
 	# comObject:	COM Object from an Outlook folder search
 	##
 	def __init__(self, comObject):
+		## Define stuff
 		self.comObject		= comObject
 		self.participants	= False
+		## Process stuff
+		self.parseParticipants()
 	##
 	# Parse participants:
 	#
 	# force:	Boolean if attendees have already been cached 
 	#			but this is true, do it again anyway.
 	##
-	def parseAttendees(self, force=False):
+	def parseParticipants(self, force=False):
 		## Cache participants unless it's done already and not forced
 		if self.participants and not force:
 			return
@@ -37,20 +46,29 @@ class OutlookerCOMObject():
 	# instance created during this Appointment's constructor, Attendees
 	# can be linked to all their appointments
 	##
-	def replaceAttendee(self, participantInstance):
-		updatedAttendees	= []
+	def replaceParticipant(self, participantInstance):
+		updatedParticipants	= []
 		## Check all existing participant instances
 		for participant in self.participants:
 			##
 			# If the existing participant is effecitvely the passed,
 			# participant - their participant.formattedName is the
 			# same - then remove the instance created for this
-			# Appointment and repalce with the passed instance.
+			# OutlookerCOMObject descendant and repalce with the passed instance.
 			##
-			if attendee == participantInstance:
-				updatedAttendees.append(participantInstance)
-				attendee.removeAppointment(self)
-				participantInstance.addAppointment(self)
+			if participant == participantInstance:
+				updatedParticipants.append(participantInstance)
+				participant.removeCOMObject(self)
+				participantInstance.addCOMObject(self)
 			else:
-				updatedAttendees.append(attendee)
-		self.attendees		= updatedAttendees
+				updatedParticipants.append(participant)
+		## Replace the Participants list
+		self.participants	= updatedParticipants
+	##
+	# Check to see if a Participant was involved in
+	#
+	# particpant:	Participant who might be involved with the thing
+	##
+	def participantWasInvolved(self, participant):
+		return participant in self.participants
+		
